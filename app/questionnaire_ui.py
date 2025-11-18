@@ -1,7 +1,6 @@
 import streamlit as st
 import logging
 import json
-import uuid
 import os
 from datetime import datetime
 from typing import Optional, Dict, Any
@@ -10,7 +9,6 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import sys
-# Add the directory containing 'questionaires' to the path
 sys.path.append(os.path.dirname(os.path.abspath(__file__)))
 
 try:
@@ -19,8 +17,7 @@ try:
     from sheet.model import QuestionnaireResponse, SheetOperation
     from sheet.connect import GoogleSheetsConnector
 except ImportError as e:
-    st.error(f"Error importing modules: {e}. Please make sure all required files (engine.py, model.py, etc.) are in the correct directories.")
-    # Stop execution if core modules are missing
+    st.error(f"Error importing modules: {e}")
     st.stop()
 
 
@@ -67,12 +64,10 @@ st.markdown("""
 
 
 def initialize_session_state():
-    """Initialize session state variables"""
     if 'questionnaire' not in st.session_state:
         st.session_state.questionnaire = None    
     if 'generation_history' not in st.session_state:
         st.session_state.generation_history = []
-    # ADDED: Store the last input data and config for regeneration
     if 'last_input_data' not in st.session_state:
         st.session_state.last_input_data = None
     if 'last_config' not in st.session_state:
@@ -82,7 +77,6 @@ def initialize_session_state():
 
 
 def render_sidebar():
-    """Render sidebar with configuration options"""
     st.sidebar.title("⚙️ Configuration")
     
     st.sidebar.subheader("API Settings")
@@ -131,26 +125,19 @@ def render_sidebar():
         st.sidebar.info(f"Questionnaires must score ≥ {pass_threshold}/100 to pass")
     
     # Google Sheets Configuration
-    st.sidebar.subheader("Google Sheets")
+    st.sidebar.subheader("📊 Google Sheets")
     
-    # Check for credentials
     credentials_path = os.getenv('GOOGLE_APPLICATION_CREDENTIALS')
     if credentials_path and os.path.exists(credentials_path):
-        st.sidebar.success("✅ Google credentials found")
+        st.sidebar.success("✅ Credentials configured")
     else:
-        st.sidebar.warning("⚠️ Google credentials not found")
-        with st.sidebar.expander("📋 Setup Instructions"):
+        st.sidebar.warning("⚠️ Credentials not found")
+        with st.sidebar.expander("Setup Instructions"):
             st.markdown("""
-            **To enable Google Sheets integration:**
-            
-            1. Go to [Google Cloud Console](https://console.cloud.google.com/)
-            2. Create a service account
-            3. Download the JSON key file
-            4. Set environment variable:
-               ```
-               GOOGLE_APPLICATION_CREDENTIALS=path/to/key.json
-               ```
-            5. Share your Google Sheet with the service account email
+            1. Create service account in [Google Cloud Console](https://console.cloud.google.com/)
+            2. Download JSON key file
+            3. Set `GOOGLE_APPLICATION_CREDENTIALS` in .env
+            4. Share your sheet with service account email
             """)
     
     
@@ -168,7 +155,6 @@ def render_sidebar():
 
 
 def render_input_form():
-    """Render the main input form"""
     st.markdown('<h2 class="section-header">📝 Project Requirements</h2>', unsafe_allow_html=True)
     
     col1, col2 = st.columns(2)
@@ -266,7 +252,6 @@ def render_input_form():
 def generate_questionnaire(input_data: Dict[str, Any], config: Dict[str, Any],
                         previous_questionnaire: Optional[QuestionnaireOutput] = None,
                         feedback: Optional[str] = None):
-    """Generate questionnaire using the orchestrator with LLM-as-Judge validation"""
     try:
         # Validate required fields
         if not input_data['customer_name'] or not input_data['requirements'] or not input_data['audience']:
@@ -284,10 +269,10 @@ def generate_questionnaire(input_data: Dict[str, Any], config: Dict[str, Any],
             business_domain=input_data['business_domain'],
             audience=input_data['audience'],
             language=input_data['language'],
-            project_type=input_data['project_type'] if input_data['project_type'] != "Other" else None,
-            budget_range=input_data['budget_range'] if input_data['budget_range'] != "Not specified" else None,
-            timeline=input_data['timeline'] if input_data['timeline'] != "Not specified" else None,
-            additional_context=input_data['additional_context'] if input_data['additional_context'] else None
+            project_type=input_data.get('project_type') if input_data.get('project_type') != "Other" else None,
+            budget_range=input_data.get('budget_range') if input_data.get('budget_range') != "Not specified" else None,
+            timeline=input_data.get('timeline') if input_data.get('timeline') != "Not specified" else None,
+            additional_context=input_data.get('additional_context') or None
         )
         
         # Create generation config
@@ -326,10 +311,11 @@ def generate_questionnaire(input_data: Dict[str, Any], config: Dict[str, Any],
         st.session_state.judge_result = result.get('judge_result')
         
         # Show result status
+        judge_result = result.get('judge_result', {})
         if result['status'] == 'success':
-            st.success(f"✅ Questionnaire generated successfully! (Judge Score: {result['judge_result']['score']}/100, Attempts: {result['attempts']})")
+            st.success(f"✅ Generated successfully! Score: {judge_result.get('score', 0)}/100 (Attempts: {result['attempts']})")
         elif result['status'] == 'max_retries_reached':
-            st.warning(f"⚠️ {result['warning']} (Best Score: {result['judge_result']['score']}/100)")
+            st.warning(f"⚠️ {result.get('warning', 'Max retries reached')} (Best: {judge_result.get('score', 0)}/100)")
         
         return result['questionnaire']
         
@@ -493,131 +479,129 @@ def main():
     with tab2:
         if st.session_state.questionnaire:
             render_questionnaire(st.session_state.questionnaire)
-            # --- ADDED: Regenerate Button ---
             st.markdown("---")
             st.markdown("### 🔄 Regenerate with Feedback")
-            st.caption("Provide feedback on the questionnaire above and regenerate. The AI will use your feedback, the original inputs, and the current sidebar settings.")
+            st.caption("Provide feedback to improve the questionnaire. The AI will use your feedback and current sidebar settings.")
+            
             feedback_text = st.text_area(
-                "Your feedback (e.g., 'add more technical questions', 'make it simpler', 'focus on security')", 
+                "Your feedback",
+                placeholder="e.g., 'add more technical questions', 'make it simpler', 'focus on security'",
                 key="feedback_input"
             )
 
             if st.button("🚀 Regenerate with Feedback", use_container_width=True):
                 if not feedback_text:
-                    st.warning("Please enter your feedback in the text box above.")
-                elif 'last_input_data' not in st.session_state or st.session_state.last_input_data is None:
-                    st.error("Could not find data to regenerate. Please generate from Tab 1 first.")
+                    st.warning("Please enter your feedback above.")
+                elif not st.session_state.get('last_input_data'):
+                    st.error("Could not find original data. Please generate from Tab 1 first.")
                 else:
-                    # regenerate with feedback
                     questionnaire = generate_questionnaire(
-                        st.session_state.last_input_data, # orginal data
-                        config, 
-                        previous_questionnaire=st.session_state.questionnaire, 
-                        feedback=feedback_text 
+                        st.session_state.last_input_data,
+                        config,
+                        previous_questionnaire=st.session_state.questionnaire,
+                        feedback=feedback_text
                     )
-                    
                     if questionnaire:
                         st.session_state.questionnaire = questionnaire
-                        
-                        # add to history
                         st.session_state.generation_history.append({
                             'customer_name': questionnaire.customer_name,
                             'business_domain': questionnaire.business_domain,
                             'language': questionnaire.language,
                             'total_questions': questionnaire.total_questions,
                             'created_at': questionnaire.created_at.strftime("%Y-%m-%d %H:%M"),
-                            'requirements': f"(Feedback: {feedback_text[:100]}...) " + st.session_state.last_input_data['requirements']
+                            'requirements': f"(Feedback: {feedback_text[:50]}...) {st.session_state.last_input_data['requirements'][:100]}"
                         })
-                        
-                        if "WARNING:" in questionnaire.description or "CRITICAL ERROR:" in questionnaire.description:
-                            st.warning(f"⚠️ {questionnaire.description}")
-                        else:
-                            st.success("✅ Questionnaire regenerated successfully!")
-                        st.rerun() #
+                        st.success("✅ Questionnaire regenerated successfully!")
+                        st.rerun()
 
-            # --- End of Regenerate Button ---
-
-            # Action buttons
             st.markdown("---")
             st.markdown("### 💾 Export Options")
             
-            col1, col2, col3 = st.columns(3)
+            col1, col2 = st.columns(2)
             
             with col1:
                 st.markdown("**📊 Export to Google Sheets**")
-                st.caption("Export to YOUR Google Sheet (no quota issues!)")
                 
-                # Check credentials
                 credentials_ok = bool(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
                 
                 if credentials_ok:
-                    # Input field for Google Sheet URL
                     sheet_url = st.text_input(
-                        "Paste your Google Sheet URL:",
+                        "Google Sheet URL:",
                         placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
                         help="Share the sheet with service account first!",
                         key="sheet_url_input"
                     )
                     
-                    if st.button("📊 Export to Google Sheets", type="primary", use_container_width=True, key="export_sheets"):
+                    worksheet_name = st.text_input(
+                        "Worksheet Name:",
+                        value="Questionnaire",
+                        placeholder="e.g., Questionnaire, Survey_2024",
+                        help="Name of the worksheet tab (will replace if exists)",
+                        key="worksheet_name_input"
+                    )
+                    
+                    if st.button("📊 Export to Sheets", type="primary", use_container_width=True):
                         if not sheet_url:
                             st.error("❌ Please provide a Google Sheet URL first!")
+                        elif not worksheet_name or not worksheet_name.strip():
+                            st.error("❌ Please provide a worksheet name!")
                         else:
-                            with st.spinner("🔄 Exporting to your Google Sheet..."):
+                            with st.spinner("🔄 Exporting..."):
                                 try:
+                                    # Get original requirements from last_input_data if available
+                                    original_requirements = None
+                                    if st.session_state.get('last_input_data'):
+                                        original_requirements = st.session_state.last_input_data.get('requirements')
+                                    
                                     connector = GoogleSheetsConnector()
                                     result = connector.export_questionnaire_to_existing_sheet(
                                         spreadsheet_url=sheet_url,
                                         questionnaire=st.session_state.questionnaire,
-                                        judge_result=st.session_state.judge_result
+                                        judge_result=st.session_state.judge_result,
+                                        input_requirements=original_requirements,
+                                        worksheet_name=worksheet_name.strip()
                                     )
                                     
                                     if result.success:
-                                        st.success("✅ " + result.message)
-                                        st.markdown(f"**📎 Your Sheet:**")
-                                        st.code(result.spreadsheet_url, language=None)
-                                        st.markdown(f"[🔗 Open Google Sheet]({result.spreadsheet_url})")
+                                        st.success(f"✅ {result.message}")
+                                        st.markdown(f"[🔗 Open Sheet]({result.spreadsheet_url})")
                                         st.balloons()
                                     else:
                                         st.error(f"❌ Export failed: {result.error_message}")
-                                        if "Cannot access spreadsheet" in result.error_message:
-                                            st.warning("💡 Make sure you shared the sheet with service account!")
-                                            st.info("Check HOW_TO_SHARE.md for instructions")
+                                        if "Cannot access" in result.error_message:
+                                            st.info("💡 Make sure you shared the sheet with the service account!")
                                 except Exception as e:
                                     st.error(f"❌ Error: {str(e)}")
                                     logger.error(f"Export error: {str(e)}")
                 else:
-                    st.text_input("Paste your Google Sheet URL:", disabled=True, key="sheet_url_disabled")
-                    st.button("📊 Export to Google Sheets", disabled=True, use_container_width=True, key="export_sheets_disabled")
-                    st.caption("❌ Google credentials not found")
-                    st.caption("👈 Configure GOOGLE_APPLICATION_CREDENTIALS")
+                    st.text_input("Google Sheet URL:", disabled=True)
+                    st.text_input("Worksheet Name:", disabled=True, value="Questionnaire")
+                    st.button("📊 Export to Sheets", disabled=True, use_container_width=True)
+                    st.caption("⚠️ Configure GOOGLE_APPLICATION_CREDENTIALS in .env")
             
-            
-            with col3:
+            with col2:
                 st.markdown("**📥 Download JSON**")
-                st.caption("Download questionnaire as JSON file")
+                
                 questionnaire_data = {
-                    'questionnaire': {
-                        'id': st.session_state.questionnaire.questionnaire_id,
-                        'title': st.session_state.questionnaire.title,
-                        'description': st.session_state.questionnaire.description,
-                        'customer_name': st.session_state.questionnaire.customer_name,
-                        'business_domain': st.session_state.questionnaire.business_domain,
-                        'audience': st.session_state.questionnaire.audience,
-                        'language': st.session_state.questionnaire.language,
-                        'total_questions': st.session_state.questionnaire.total_questions,
-                        'created_at': st.session_state.questionnaire.created_at.isoformat(),
-                        'questions': [
-                            {
-                                'id': q.id,
-                                'section': q.section,
-                                'question_text': q.question_text,
-                                'title': q.title,
-                                'similarity_score': q.similarity_score
-                            }
-                            for q in st.session_state.questionnaire.questions
-                        ]
-                    },
+                    'id': st.session_state.questionnaire.questionnaire_id,
+                    'title': st.session_state.questionnaire.title,
+                    'description': st.session_state.questionnaire.description,
+                    'customer_name': st.session_state.questionnaire.customer_name,
+                    'business_domain': st.session_state.questionnaire.business_domain,
+                    'audience': st.session_state.questionnaire.audience,
+                    'language': st.session_state.questionnaire.language,
+                    'total_questions': st.session_state.questionnaire.total_questions,
+                    'created_at': st.session_state.questionnaire.created_at.isoformat(),
+                    'questions': [
+                        {
+                            'id': q.id,
+                            'section': q.section,
+                            'question_text': q.question_text,
+                            'title': q.title,
+                            'similarity_score': q.similarity_score
+                        }
+                        for q in st.session_state.questionnaire.questions
+                    ]
                 }
                 
                 st.download_button(
@@ -634,6 +618,5 @@ def main():
         render_history()
 
 
-# Run the app when executed directly (for testing)
 if __name__ == "__main__":
     main()

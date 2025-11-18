@@ -14,7 +14,7 @@ except ImportError:
 
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
-from questionaires.model import QuestionnaireOutput
+from questionaires.model import QuestionnaireOutput, QuestionnaireInput
 
 from .model import QuestionnaireResponse, SheetOperation
 
@@ -26,8 +26,6 @@ class GoogleSheetsConnector:
     def __init__(self):
         self.client = None
         self.drive_service = None
-        self.spreadsheet = None
-        self.worksheet = None
         
         if not GSPREAD_AVAILABLE:
             logger.error("gspread library not available")
@@ -56,52 +54,15 @@ class GoogleSheetsConnector:
             logger.error(f"Authentication failed: {e}")
             return False
     
-    def connect_to_sheet(self, spreadsheet_id: str, worksheet_name: str = "Responses") -> bool:
-        try:
-            if not self.client and not self.authenticate():
-                return False
-            
-            self.spreadsheet = self.client.open_by_key(spreadsheet_id)
-            
-            try:
-                self.worksheet = self.spreadsheet.worksheet(worksheet_name)
-            except gspread.WorksheetNotFound:
-                self.worksheet = self.spreadsheet.add_worksheet(
-                    title=worksheet_name, rows=1000, cols=10
-                )
-            
-            return True
-            
-        except Exception as e:
-            logger.error(f"Failed to connect: {e}")
-            return False
-    
-    def write_questionnaire_response(self, response: QuestionnaireResponse) -> SheetOperation:
-        try:
-            if not self.worksheet:
-                return SheetOperation.error_result("No worksheet connected")
-            
-            existing_values = self.worksheet.row_values(1)
-            headers = QuestionnaireResponse.get_sheet_headers()
-            if existing_values != headers:
-                self.worksheet.clear()
-                self.worksheet.append_row(headers)
-            
-            row_data = response.to_sheet_row()
-            self.worksheet.append_row(row_data)
-            
-            return SheetOperation.success_result(f"Response saved for {response.customer_name}")
-            
-        except Exception as e:
-            logger.error(f"Failed to write response: {e}")
-            return SheetOperation.error_result(str(e))
+
     
     def export_questionnaire_to_existing_sheet(
         self,
         spreadsheet_url: str,
         questionnaire: QuestionnaireOutput,
         judge_result: Optional[Dict] = None,
-        worksheet_name: str = "Questionnaire"
+        worksheet_name: str = "Questionnaire",
+        input_requirements: Optional[str] = None
     ) -> SheetOperation:
 
         try:
@@ -118,23 +79,27 @@ class GoogleSheetsConnector:
             # Open the spreadsheet
             try:
                 spreadsheet = self.client.open_by_key(spreadsheet_id)
-            except Exception as e:
+            except gspread.exceptions.SpreadsheetNotFound:
                 return SheetOperation.error_result(
-                    f"Cannot access spreadsheet. Make sure you've shared it with the service account: {str(e)}"
+                    "Spreadsheet not found. Make sure you've shared it with the service account."
                 )
+            except Exception as e:
+                return SheetOperation.error_result(f"Cannot access spreadsheet: {str(e)}")
             
-            # Create or get worksheet
+            # Delete old worksheet if exists, then create fresh one
             try:
-                worksheet = spreadsheet.worksheet(worksheet_name)
-                logger.info(f"Using existing worksheet: {worksheet_name}")
-                # Clear existing content
-                worksheet.clear()
+                old_worksheet = spreadsheet.worksheet(worksheet_name)
+                spreadsheet.del_worksheet(old_worksheet)
+                logger.info(f"✅ Deleted existing worksheet: {worksheet_name}")
             except gspread.WorksheetNotFound:
-                worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows=100, cols=5)
-                logger.info(f"Created new worksheet: {worksheet_name}")
+                logger.info(f"Worksheet '{worksheet_name}' does not exist, will create new one")
+            
+            # Create fresh worksheet
+            worksheet = spreadsheet.add_worksheet(title=worksheet_name, rows=100, cols=5)
+            logger.info(f"✅ Created new worksheet: {worksheet_name}")
             
             # Format the questionnaire
-            self._format_questionnaire_sheet(worksheet, questionnaire, judge_result)
+            self._format_questionnaire_sheet(worksheet, questionnaire, judge_result, input_requirements)
             
             # Get spreadsheet URL
             spreadsheet_url = f"https://docs.google.com/spreadsheets/d/{spreadsheet.id}/edit"
@@ -153,7 +118,7 @@ class GoogleSheetsConnector:
             return SheetOperation.error_result(str(e))
     
     def _extract_spreadsheet_id(self, url_or_id: str) -> Optional[str]:
-        # If it's already just an ID (no slashes)
+        """Extract spreadsheet ID from URL or return ID if already provided"""
         if '/' not in url_or_id:
             return url_or_id
         
@@ -161,10 +126,9 @@ class GoogleSheetsConnector:
         try:
             if '/spreadsheets/d/' in url_or_id:
                 parts = url_or_id.split('/spreadsheets/d/')[1]
-                spreadsheet_id = parts.split('/')[0]
-                return spreadsheet_id
-        except:
-            pass
+                return parts.split('/')[0]
+        except Exception as e:
+            logger.error(f"Failed to extract spreadsheet ID: {e}")
         
         return None
     
@@ -212,7 +176,7 @@ class GoogleSheetsConnector:
             worksheet.update_title("Questionnaire")
             
             # Build the sheet content
-            self._format_questionnaire_sheet(worksheet, questionnaire, judge_result)
+            self._format_questionnaire_sheet(worksheet, questionnaire, judge_result, None)
             
             # Share with anyone with link (view only)
             try:
@@ -241,23 +205,22 @@ class GoogleSheetsConnector:
         self, 
         worksheet, 
         questionnaire: QuestionnaireOutput,
-        judge_result: Optional[Dict] = None
+        judge_result: Optional[Dict] = None,
+        input_requirements: Optional[str] = None
     ):
         """Format the questionnaire sheet with beautiful styling"""
-        
         # Prepare data rows
         data = []
-        current_row = 1
         
         # Row 1: Main Title
-        data.append(["SURVEY QUESTIONS ON " + questionnaire.business_domain.upper() + " PROJECT"])
+        data.append([f"SURVEY QUESTIONS FOR {questionnaire.customer_name.upper()}"])
         
         # Row 2: Instruction (merged)
         instruction = "* Please provide detailed answers. If possible, please provide Cloud Ace with sample data / architecture / any related examples from your company."
         data.append([instruction])
         
-        # Row 3: Customer info
-        customer_info = f"Customer: {questionnaire.customer_name}\nRequirements: {questionnaire.description}"
+        requirements_text = input_requirements
+        customer_info = f"Customer: {questionnaire.customer_name}\nRequirements: {requirements_text}"
         data.append([customer_info])
         
         # Row 4: Table Header
@@ -284,57 +247,28 @@ class GoogleSheetsConnector:
                 data.append(row)
             section_number += 1
         
-        
-
-
         # Write all data at once
         worksheet.update('A1', data)
-
-
-        current_data_row = 5  # Start of data rows
+        
+        # Merge cells for sections with multiple questions
+        current_data_row = 5
         for section_name, questions in sections.items():
             num_questions = len(questions)
-            if num_questions > 1:  # Only merge if section has more than 1 question
+            if num_questions > 1:
                 no_merge_range = f'A{current_data_row}:A{current_data_row + num_questions - 1}'
                 section_merge_range = f'B{current_data_row}:B{current_data_row + num_questions - 1}'
                 worksheet.merge_cells(no_merge_range)
                 worksheet.merge_cells(section_merge_range)
-                logger.info(f"Merged No: {no_merge_range}, Section: {section_merge_range}")
             current_data_row += num_questions
-            
+        
         # Apply formatting
-        self._apply_formatting(worksheet, questionnaire, len(data), len(sections))
-
+        self._apply_formatting(worksheet, len(data))
         
         logger.info(f"Formatted sheet with {len(data)} rows")
     
-    def _apply_formatting(self, worksheet, questionnaire: QuestionnaireOutput, total_rows: int, section_count: int):
+    def _apply_formatting(self, worksheet, total_rows: int):
         """Apply beautiful formatting to the sheet"""
         try:
-            # First, unmerge all cells to avoid conflicts
-            try:
-                # Get all merged ranges
-                merged_ranges = worksheet.spreadsheet.fetch_sheet_metadata()['sheets'][0].get('merges', [])
-                if merged_ranges:
-                    unmerge_requests = []
-                    for merge in merged_ranges:
-                        unmerge_requests.append({
-                            'unmergeCells': {
-                                'range': {
-                                    'sheetId': worksheet.id,
-                                    'startRowIndex': merge['startRowIndex'],
-                                    'endRowIndex': merge['endRowIndex'],
-                                    'startColumnIndex': merge['startColumnIndex'],
-                                    'endColumnIndex': merge['endColumnIndex']
-                                }
-                            }
-                        })
-                    
-                    if unmerge_requests:
-                        worksheet.spreadsheet.batch_update({'requests': unmerge_requests})
-                        logger.info(f"✅ Unmerged {len(unmerge_requests)} existing merged ranges")
-            except Exception as e:
-                logger.warning(f"Could not unmerge cells: {e}")
             
             # Set column widths using batch update (pixels)
             body = {
@@ -415,7 +349,13 @@ class GoogleSheetsConnector:
                     'fontFamily': 'Times New Roman'
                 },
                 'horizontalAlignment': 'CENTER',
-                'verticalAlignment': 'MIDDLE'
+                'verticalAlignment': 'MIDDLE',
+                'borders': {
+                    'left': {'style': 'SOLID', 'width': 1},
+                    'right': {'style': 'SOLID', 'width': 1},
+                    'top': {'style': 'SOLID', 'width': 1},
+                    'bottom': {'style': 'SOLID', 'width': 1}
+                }
             })
             
             # Row 2: Instruction - Red text, italic
@@ -428,7 +368,13 @@ class GoogleSheetsConnector:
                     'fontFamily': 'Times New Roman'
                 },
                 'verticalAlignment': 'TOP',
-                'wrapStrategy': 'WRAP'
+                'wrapStrategy': 'WRAP',
+                'borders': {
+                    'bottom': {'style': 'SOLID', 'width': 1},
+                    'top': {'style': 'SOLID', 'width': 1},
+                    'left': {'style': 'SOLID', 'width': 1},
+                    'right': {'style': 'SOLID', 'width': 1}
+                }
             })
             
             # Row 3: Customer info
@@ -438,7 +384,13 @@ class GoogleSheetsConnector:
                                'fontSize': 12,
                                'fontFamily': 'Times New Roman'},
                 'verticalAlignment': 'TOP',
-                'wrapStrategy': 'WRAP'
+                'wrapStrategy': 'WRAP',
+                'borders': {
+                    'left': {'style': 'SOLID', 'width': 1},
+                    'right': {'style': 'SOLID', 'width': 1},
+                    'top': {'style': 'SOLID', 'width': 1},
+                    'bottom': {'style': 'SOLID', 'width': 1}
+                }
             })
             
             # Row 4: Table Header - Dark blue background, white text, bold, centered
@@ -481,7 +433,6 @@ class GoogleSheetsConnector:
                     'verticalAlignment': 'MIDDLE',
                     'textFormat': {'fontSize': 12, 'fontFamily': 'Times New Roman'}
                 })
-            
             
             # Freeze header rows
             worksheet.freeze(rows=4)
