@@ -239,32 +239,7 @@ Issues:
 - Increase threshold to 75+
 - Review judge rubric in judge.py
 
----
 
-## Performance Metrics
-
-### Typical Results
-- **Pass Rate**: ~70% on first attempt (threshold=75)
-- **Avg Attempts**: 1.8
-- **Avg Score**: 78/100
-- **Time**: 30-90 seconds per generation
-
-### By Threshold
-| Threshold | Pass Rate | Avg Attempts | Avg Time |
-|-----------|-----------|--------------|----------|
-| 60        | 95%       | 1.2          | 45s      |
-| 75        | 70%       | 1.8          | 75s      |
-| 85        | 40%       | 2.6          | 120s     |
-
----
-
-## Testing
-
-### Test Judge Only
-```bash
-cd app/questionaires
-python judge.py
-```
 
 ### Test Orchestrator
 ```bash
