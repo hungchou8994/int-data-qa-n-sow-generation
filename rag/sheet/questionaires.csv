@@ -1,0 +1,29 @@
+SURVEY QUESTIONS,,,
+"* Please provide detailed answers. If possible, please provide Cloud Ace with sample data / architecture / any related examples from your company.",,,
+"Customer Name: Cloud Ace
+Requirements: Build a support tool for creating documents based on historical data",,,
+#,Section,Question,Answer
+1,Project Background & Objective,What are the main objectives or outcomes of this project?,Automation generate questionare & Sow on client information
+2,,What problems or pain points are you trying to solve?,"Vì số lượng client nhiều , nhiều lĩnh vực
+1. Lặp đi lặp lại 
+2. Thời gian để làm việc khác"
+3,,What deliverables do you expect at the end of the project?,"Phase 1. Ra google sheet
+Phase 2. Ra google sheet có template
+Phase 3. Hỗ trợ nhiều lĩnh vực khách hàng"
+4,,What would “success” look like from your perspective?,Human feedback
+5,Process ,Please describe the current process or system used for this business area.,"google sheet
+B1.Nhận yêu cầu từ client trao đổi sơ bộ
+B2. Thực hiện khảo sát lấy thông tin chi tiết
+B3. Nếu yêu cầu chưa rõ trao đổi thêm thông tin
+B4. Lên scope of work"
+6,,Who are the key people involved in the current process?,internal members
+7,Metrics & Success Criteria,Do you have any baseline data or benchmarks to compare against?,
+8,,Who will be responsible for validating final outcomes?,Yes
+9,Data source & Infrastructure,"What are the main data sources this project will depend on?
+E.g: template of questionaire, template of scope of work, client information","Luôn sẵn sàng template questionaire, template scope of work
+client information chỉ có khi có dự án"
+10,,"Where is the data currently stored? (e.g., on-premise, cloud, files)",GG drive
+11,,What is the current level of data accessibility ?,"Share folder on gg drive : 2 folders : quetionaire , scope of work. Các file đều có pattern"
+12,,Are there any security or compliance requirements?,Không được phép lộ thông tin khách hàng trước. 
+13,Others,What is the desired project timeline or delivery date?,3 weeks
+14,,Do you have an estimated budget or financial constraint?,tbd

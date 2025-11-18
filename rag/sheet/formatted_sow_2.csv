@@ -1,0 +1,79 @@
+prj_id,project_type,task_category,item_number,task_title,priority,content,man_days
+project_2,Forecasting,Assessment & Planning,1.1,Identify business requirements,High,"Task: Identify business requirements. Detail: - Unify business models
+- Unify Scope of Works deployed
+- Unify input and output workflows",2.0
+project_2,Forecasting,Assessment & Planning,1.2,Explore current data sources,High,"Task: Explore current data sources. Detail: - Unify data sources, source types and scope of data sources
+- Unify data source access methods, information stored on GCP
+- Unify the quantity and capacity of data sources converted to GCP
+- Unify comparison of raw data converted to GCP with source data",3.0
+project_2,Forecasting,Assessment & Planning,1.3,Stakeholder alignment,High,"Task: Stakeholder alignment. Detail: - Unify AI/ML models in use
+- Unify input and processing of AI/ML models in use
+- Unify test cases and success criteria for the project",2.0
+project_2,Forecasting,GCP Project Prepartion,2.1,Billing & Project Setup,High,Task: Billing & Project Setup. Detail: ,0.5
+project_2,Forecasting,GCP Project Prepartion,2.2,Access assignment to the Project,High,"Task: Access assignment to the Project. Detail: - Configure network, add team members, assign permissions and set up dev and MVP environments",1.5
+project_2,Forecasting,GCP Project Prepartion,2.3,Data preparation,High,Task: Data preparation. Detail: - Prepare data and provide sample data files,3.0
+project_2,Forecasting,Design Architecture,3.1,Standardize pipeline based on survey details and design dataset,High,Task: Standardize pipeline based on survey details and design dataset. Detail: - Design pipeline according to agreed information,2.0
+project_2,Forecasting,Design Architecture,3.2,Design detailed data model and corresponding reports,High,Task: Design detailed data model and corresponding reports. Detail: - Design detailed data model and corresponding report after agreeing on detailed requirements,5.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.1,"Check and complete input data: schema, data type, filter",High,"Task: Check and complete input data: schema, data type, filter. Detail: - Review the raw input data stored in Dropbox for completeness and consistency.
+- Validate and standardize data schema — ensuring uniform column names, data types, and formats across files.
+- Filter out unnecessary or invalid data before ingestion to optimize downstream processing.
+- Document the finalized data schema to serve as a reference for all subsequent pipeline steps.",4.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.2,Set up dataset for Migration,High,"Task: Set up dataset for Migration. Detail: - Create and configure datasets in BigQuery to store both raw and processed data.
+- Define dataset structure and table partitioning strategy (e.g., by date or source file) for optimized query performance.
+- Apply appropriate data governance settings such as dataset access controls policies.
+- Ensure dataset naming and structure align with organizational data architecture standards.",2.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.3,Setup the authentication & authorization access to Dropbox folder,High,"Task: Setup the authentication & authorization access to Dropbox folder. Detail: - Configure secure token-based authentication between Google Cloud Run and Dropbox API.
+- Store access credentials securely using Secret Manager.
+- Grant least-privilege permissions to control access only to the specific Dropbox folder required.
+- Test and validate secure connection and data retrieval from Dropbox using sample files.",3.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.4,Build & scheduled pipeline to ingest data from Dropbox data files into Cloud Storage,High,"Task: Build & scheduled pipeline to ingest data from Dropbox data files into Cloud Storage. Detail: - Develop a Cloud Run service that automatically scan new or updated files in Dropbox.
+- Schedule this ingestion using Cloud Scheduler or event-based triggers for updates.
+- Transfer raw files into Google Cloud Storage (GCS) while maintaining folder structure and metadata.
+- Implement error handling, logging, and retry mechanisms to ensure reliability of the data ingestion process.
+- Track data ingestion events and maintain logs for auditing and troubleshooting.",7.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.5,Build pipeline to automatically ingest & process data from GCS to BigQuery,High,"Task: Build pipeline to automatically ingest & process data from GCS to BigQuery. Detail: - Develop a Cloud Run trigger to process data from GCS into structured BigQuery tables.
+- Perform necessary data transformations such as parsing, type casting, deduplication, and enrichment.
+- Ensure the processed data aligns with the predefined schema and supports downstream analytics or modeling.",8.0
+project_2,Forecasting,Data Integration from dropbox (Cloud Run),4.6,Deploy & test on dev environment,High,"Task: Deploy & test on dev environment. Detail: - Deploy all components (Cloud Run, pipelines, scheduler, authentication setup).
+- Conduct end-to-end testing using sample Dropbox data to verify successful ingestion and transformation.
+- Validate schema mapping, data accuracy, and pipeline performance.",5.0
+project_2,Forecasting,Building Demand Forecasting Model (Vertex AI),5.1,Cleaning Data & Feature Engineering,High,"Task: Cleaning Data & Feature Engineering. Detail: - Collect, clean, and preprocess raw data from Dropbox
+- Handle missing values, outliers, and inconsistent records to ensure data quality.
+- Perform data normalization, encoding, and aggregation by relevant timeframes (daily, weekly, etc.).
+- Engineer new features such as moving averages, lag features, seasonal indicators, and category-based metrics (e.g., by outlet, product, or time period).
+- Split data into training, validation, and test sets for experimentation and evaluation.",8.0
+project_2,Forecasting,Building Demand Forecasting Model (Vertex AI),5.2,Training model for Demand Forecasting with predicting by Day/Batch-Day,High,"Task: Training model for Demand Forecasting with predicting by Day/Batch-Day. Detail: - Select appropriate forecasting algorithms (e.g., Prophet, XGBoost, LSTM, or ARIMA) based on data characteristics.
+- Train multiple candidate models to compare performance across different forecasting horizons (per day or per batch of days).
+- Tune hyperparameters and optimize model performance using cross-validation.",14.0
+project_2,Forecasting,Building Demand Forecasting Model (Vertex AI),5.3,Evaluation & Prediction,High,"Task: Evaluation & Prediction. Detail: - Evaluate model accuracy using standard metrics (e.g., RMSE, MAE, MAPE).
+- Perform backtesting using historical data to simulate real-world performance.
+- Analyze residual errors and model bias to identify improvement opportunities.
+- Generate daily or batch forecasts and validate results with domain experts or business users.
+- Prepare final prediction outputs in a structured format for downstream systems or dashboards.",11.0
+project_2,Forecasting,Building Demand Forecasting Model (Vertex AI),5.4,Building MLOps for model training & prediction,High,"Task: Building MLOps for model training & prediction. Detail: - Develop a training pipeline using tools using Vertex AI Pipelines
+- Automate model retraining and prediction workflows on a defined schedule (e.g., daily, weekly).
+- Implement model versioning and artifact tracking  Vertex AI Model Registry, BigQuery).
+- Set up monitoring for data drift, model drift, and prediction performance.
+- Integrate logging, alerting, and governance mechanisms to ensure reliability and traceability.",9.0
+project_2,Forecasting,Building Demand Forecasting Model (Vertex AI),5.5,Deployment & Testing on Dev Environment,High,"Task: Deployment & Testing on Dev Environment. Detail: - Deploy the end-to-end pipeline in a development environment.
+- Test model training, prediction scheduling, and output delivery end-to-end.
+- Validate performance, accuracy, and stability under real data scenarios.
+- Perform integration testing with existing data pipelines, data for dashboards.",5.0
+project_2,Forecasting,Demand Forecasting Reports (Looker Studio),6.1,Set up data model for report data,High,Task: Set up data model for report data. Detail: - Create data model to serve report,8.0
+project_2,Forecasting,Demand Forecasting Reports (Looker Studio),6.2,Build reports on Looker Studio,High,"Task: Build reports on Looker Studio. Detail: - Unify dashboard content
+- Build dashboard to serve demand forecasting problem",9.0
+project_2,Forecasting,Demand Forecasting Reports (Looker Studio),6.3,Deploy & test on dev environment,High,Task: Deploy & test on dev environment. Detail: - Test on dev environment,3.0
+project_2,Forecasting,Pipeline control and Integration,7.1,Schedule pipeline with Cloud Scheduler,High,Task: Schedule pipeline with Cloud Scheduler. Detail: - Schedule automatic training and prediction of models at a certain frequency,3.0
+project_2,Forecasting,Pipeline control and Integration,7.2,Test pipeline with dev data from Dropbox,High,Task: Test pipeline with dev data from Dropbox. Detail: - Test the completion of the pipeline,3.0
+project_2,Forecasting,Integration & Testing,8.1,Operate the system with all data on prodiction,High,Task: Operate the system with all data on prodiction. Detail: ,5.0
+project_2,Forecasting,Integration & Testing,8.2,User Acceptance Testing (UAT),High,Task: User Acceptance Testing (UAT). Detail: ,10.0
+project_2,Forecasting,Integration & Testing,8.3,Check and fix errors on MVP version,High,Task: Check and fix errors on MVP version. Detail: ,6.0
+project_2,Forecasting,Documentation & Handover,9.1,User manual documents,High,Task: User manual documents. Detail: ,4.0
+project_2,Forecasting,Documentation & Handover,9.2,Technical manual documents,High,Task: Technical manual documents. Detail: ,3.0
+project_2,Forecasting,Project Management & Technical Support,10.1,Project Management,High,"Task: Project Management. Detail: - Define project governance (PM, stakeholders, dev leads).
+- Maintain roadmap & sprint planning (Agile/Backlog).
+- Track deliverables against MVP milestones.
+- Regular status reporting to business owners.",15.0
+project_2,Forecasting,Project Management & Technical Support,10.2,Technical Support,High,"Task: Technical Support. Detail: - Bug fixes, outages, and user support.
+- Maintain documentation & knowledge base.
+- Plan for onboarding, training, and post-MVP maintenance.",7.0

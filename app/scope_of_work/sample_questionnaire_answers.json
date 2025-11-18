@@ -1,0 +1,68 @@
+[
+  {
+    "question_id": "q1",
+    "section": "Project Background & Objective",
+    "question_text": "What are the main objectives or outcomes of this project?",
+    "answer": "The main objectives are to modernize our legacy CRM system, improve sales team productivity by 30%, enable mobile access for field sales representatives, and implement advanced analytics for better customer insights and data-driven decision making."
+  },
+  {
+    "question_id": "q2",
+    "section": "Project Background & Objective",
+    "question_text": "What problems or pain points are you trying to solve?",
+    "answer": "Current CRM system is slow and outdated, lacks mobile support, has limited reporting capabilities, poor integration with other systems, high maintenance costs, and difficulty in generating real-time customer insights."
+  },
+  {
+    "question_id": "q3",
+    "section": "Project Background & Objective",
+    "question_text": "What deliverables do you expect at the end of the project?",
+    "answer": "We expect a fully functional cloud-based CRM system, mobile applications for iOS and Android, integration with our ERP system, customized analytics dashboards, user training materials, technical documentation, and a migration plan with rollback procedures."
+  },
+  {
+    "question_id": "q4",
+    "section": "Process",
+    "question_text": "Please describe the current process or system used for this business area.",
+    "answer": "Currently using an on-premise CRM system built 10 years ago. Sales team manually enters customer data, reports are generated weekly via batch processing, no mobile access requiring VPN for remote work, and integration with ERP is done through nightly batch jobs."
+  },
+  {
+    "question_id": "q5",
+    "section": "Process",
+    "question_text": "Who are the key people involved in the current process?",
+    "answer": "Sales Director (John Smith) - overall CRM strategy, IT Manager (Sarah Johnson) - technical oversight, 5 sales representatives - daily users, 2 IT support staff - system maintenance, Marketing Manager (Mike Brown) - campaign management and analytics."
+  },
+  {
+    "question_id": "q6",
+    "section": "Data source & Infrastructure",
+    "question_text": "What are the main data sources this project will depend on?",
+    "answer": "Main data sources include: Legacy CRM database (MySQL, approximately 500GB), ERP system (SAP with customer master data), Customer support tickets (Zendesk), Email system (Google Workspace), Marketing automation platform (HubSpot), and external data from LinkedIn Sales Navigator."
+  },
+  {
+    "question_id": "q7",
+    "section": "Data source & Infrastructure",
+    "question_text": "Where is the data currently stored?",
+    "answer": "Data is currently stored on-premise in our data center: CRM database on dedicated MySQL servers, file attachments on network storage (NAS), backups on tape drives with offsite storage, some documents in SharePoint on-premise."
+  },
+  {
+    "question_id": "q8",
+    "section": "Data source & Infrastructure",
+    "question_text": "What is the current level of data accessibility?",
+    "answer": "Data accessibility is limited - only available within office network or through VPN, no real-time mobile access, API access is restricted and requires special permissions, reporting data is only available during business hours due to system performance."
+  },
+  {
+    "question_id": "q9",
+    "section": "Data source & Infrastructure",
+    "question_text": "Are there any security or compliance requirements?",
+    "answer": "Yes, we must comply with GDPR for European customers, SOC 2 Type II certification is required, all customer data must be encrypted at rest and in transit, need audit logging for all data access, and regular penetration testing is required."
+  },
+  {
+    "question_id": "q10",
+    "section": "Others",
+    "question_text": "What is the desired project timeline or delivery date?",
+    "answer": "We need to complete the migration by end of Q2 2025. Preferred timeline: Q1 2025 for design and development, pilot testing with 10 users in March 2025, full rollout in May-June 2025, with complete migration by June 30, 2025."
+  },
+  {
+    "question_id": "q11",
+    "section": "Others",
+    "question_text": "Do you have an estimated budget or financial constraint?",
+    "answer": "Budget range is $75,000 - $90,000 for the entire project including licensing, implementation, training, and support for first year. Additional annual operating costs should not exceed $20,000 per year."
+  }
+]
