@@ -33,6 +33,8 @@ try:
     )
     from scope_of_work.orchestrator import SOWOrchestrator, OrchestrationResult
     from scope_of_work.sheet_reader import read_questionnaire_from_google_sheet
+    from sow_sheet.connect import SOWGoogleSheetsConnector
+    from sow_sheet.model import SheetOperation
 except ImportError as e:
     st.error(f"Error importing modules: {e}")
     st.stop()
@@ -639,10 +641,74 @@ def main():
         # Export options
         st.markdown("### 📥 Export Options")
         
-        col1, col2 = st.columns(2)
+        col1, col2, col3 = st.columns(3)
         
         with col1:
+            # Export to Google Sheets
+            st.markdown("**📊 Export to Google Sheets**")
+            
+            credentials_ok = bool(os.getenv('GOOGLE_APPLICATION_CREDENTIALS'))
+            
+            if credentials_ok:
+                sheet_url = st.text_input(
+                    "Google Sheet URL:",
+                    placeholder="https://docs.google.com/spreadsheets/d/YOUR_SHEET_ID/edit",
+                    help="Share the sheet with service account first!",
+                    key="sow_sheet_url_input"
+                )
+                
+                overview_ws_name = st.text_input(
+                    "Overview Worksheet Name:",
+                    value="Overview",
+                    key="overview_ws_name"
+                )
+                
+                sow_ws_name = st.text_input(
+                    "SOW Worksheet Name:",
+                    value="Scope of Work",
+                    key="sow_ws_name"
+                )
+                
+                if st.button("📊 Export to Sheets", type="primary", use_container_width=True, key="export_sow_sheets"):
+                    if not sheet_url:
+                        st.error("❌ Please provide a Google Sheet URL!")
+                    elif not overview_ws_name.strip() or not sow_ws_name.strip():
+                        st.error("❌ Please provide worksheet names!")
+                    else:
+                        with st.spinner("🔄 Exporting SOW to Google Sheets..."):
+                            try:
+                                connector = SOWGoogleSheetsConnector()
+                                export_result = connector.export_sow_to_sheet(
+                                    spreadsheet_url=sheet_url,
+                                    project_detail=result.project_detail,
+                                    project_assumption=result.project_assumption,
+                                    scope_of_work=result.scope_of_work,
+                                    overview_worksheet_name=overview_ws_name.strip(),
+                                    sow_worksheet_name=sow_ws_name.strip()
+                                )
+                                
+                                if export_result.success:
+                                    st.success(f"✅ {export_result.message}")
+                                    st.markdown(f"[🔗 Open Sheet]({export_result.spreadsheet_url})")
+                                    st.balloons()
+                                else:
+                                    st.error(f"❌ Export failed: {export_result.error_message}")
+                                    if "Cannot access" in export_result.error_message:
+                                        st.info("💡 Make sure you shared the sheet with the service account!")
+                            except Exception as e:
+                                st.error(f"❌ Error: {str(e)}")
+                                logger.error(f"Export error: {str(e)}")
+            else:
+                st.text_input("Google Sheet URL:", disabled=True)
+                st.text_input("Overview Worksheet Name:", disabled=True, value="Overview")
+                st.text_input("SOW Worksheet Name:", disabled=True, value="Scope of Work")
+                st.button("📊 Export to Sheets", disabled=True, use_container_width=True)
+                st.caption("⚠️ Configure GOOGLE_APPLICATION_CREDENTIALS in .env")
+        
+        with col2:
             # Export as JSON
+            st.markdown("**📄 Download JSON**")
+            
             export_data = {
                 "customer_name": result.project_detail.customer_name,
                 "generated_at": datetime.now().isoformat(),
@@ -658,15 +724,17 @@ def main():
             
             json_str = json.dumps(export_data, indent=2, ensure_ascii=False)
             st.download_button(
-                label="📄 Download as JSON",
+                label="📄 Download JSON",
                 data=json_str,
                 file_name=f"sow_{result.project_detail.customer_name}_{datetime.now().strftime('%Y%m%d')}.json",
-                mime="application/json"
+                mime="application/json",
+                use_container_width=True
             )
         
-        with col2:
+        with col3:
             # Start new generation
-            if st.button("🔄 Start New Generation"):
+            st.markdown("**🔄 New Generation**")
+            if st.button("🔄 Start New", use_container_width=True):
                 # Clear session state
                 for key in ['orchestrator', 'client_info', 'questionnaire_answers', 'result']:
                     if key in st.session_state:
