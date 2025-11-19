@@ -75,3 +75,21 @@ tmp/
 # OS
 Thumbs.db
 .DS_Store
+
+# Local development
+*.local
+
+# Database
+*.db
+*.sqlite
+*.sqlite3
+
+# Coverage reports
+.coverage
+htmlcov/
+.pytest_cache/
+
+# Large data files (optional - uncomment if needed)
+# *.parquet
+# *.h5
+# *.hdf5

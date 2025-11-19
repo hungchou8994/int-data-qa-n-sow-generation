@@ -618,7 +618,6 @@ gcloud run logs tail SERVICE_NAME --region asia-southeast1
 
 **Issues & Questions:**
 - GitHub Issues: [Create an issue](https://github.com/hungchou8994/int-data-qa-n-sow-generation/issues)
-- Email: hung.chou@cloudace.vn
 
 **Documentation:**
 - [Google Gemini API Docs](https://ai.google.dev/docs)
